@@ -8,10 +8,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
-import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import dev.lucasmartins.pokedex.ui.theme.PokedexTheme
@@ -35,7 +35,11 @@ class MainActivity : ComponentActivity() {
 fun Pokemon(
     pokemonViewModel: PokemonViewModel = getViewModel()
 ) {
-    val pokemonList by pokemonViewModel.getPokemon(1..100).collectAsState(initial = listOf())
+    val pokemonList by pokemonViewModel.pokemonLiveData.observeAsState(initial = listOf())
+
+    LaunchedEffect(key1 = Unit) {
+        pokemonViewModel.loadPokemon(1..150)
+    }
 
     LazyColumn(
         modifier = Modifier.fillMaxWidth()

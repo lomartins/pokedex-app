@@ -1,28 +1,43 @@
 package dev.lucasmartins.pokedex
 
+import android.util.Log
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import dev.lucasmartins.pokedex.model.Pokemon
 import dev.lucasmartins.pokedex.repository.PokemonRepository
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.flow
-import java.net.UnknownHostException
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class PokemonViewModel(
     private val pokemonRepository: PokemonRepository
 ) : ViewModel() {
-    fun getPokemon(range: IntRange) = flow {
+    private val _pokemonLiveData = MutableLiveData<List<Pokemon>>()
+    private val scope = CoroutineScope(Dispatchers.Unconfined)
+
+    val pokemonLiveData: LiveData<List<Pokemon>> = _pokemonLiveData
+
+    fun loadPokemon(range: IntRange) {
         val pokemonList = mutableListOf<Pokemon>()
-        try {
+        scope.launch {
             for (i in range) {
-                pokemonRepository.getPokemonData(i).collect {
-                    it?.let {
+                try {
+                    pokemonRepository.getPokemonData(i)?.let {
                         pokemonList.add(it)
-                        emit(pokemonList.toMutableList())
+                        withContext(Dispatchers.Main) {
+                            _pokemonLiveData.value = pokemonList.toList()
+                        }
                     }
+                } catch (e: Exception) {
+                    Log.e(TAG, "loadPokemon: ", e)
                 }
             }
-        } catch (e: Exception) {
-
         }
+    }
+
+    companion object {
+        const val TAG = "PokemonViewModel"
     }
 }
